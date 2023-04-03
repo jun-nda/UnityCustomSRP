@@ -4,6 +4,12 @@ Shader "Custom RP/Unlit" {
 	
 	SubShader {
 		
-		Pass {}
+		Pass {
+			HLSLPROGRAM
+			#pragma vertex UnlitPassVertex
+			#pragma fragment UnlitPassFragment
+			#include "UnlitPass.hlsl"
+			ENDHLSL
+		}
 	}
 }
