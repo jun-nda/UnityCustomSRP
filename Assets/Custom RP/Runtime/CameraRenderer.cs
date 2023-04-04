@@ -28,7 +28,10 @@ public partial class CameraRenderer {
 
     // static Material errorMaterial;
 
-	public void Render (ScriptableRenderContext context, Camera camera) {
+	public void Render (
+		ScriptableRenderContext context, Camera camera,
+		bool useDynamicBatching, bool useGPUInstancing
+	) {
 		this.context = context;
 		this.camera = camera;
 
@@ -39,7 +42,7 @@ public partial class CameraRenderer {
 		}
 
         Setup();
-        DrawVisibleGeometry();
+        DrawVisibleGeometry(useDynamicBatching, useGPUInstancing);
 #if UNITY_EDITOR
         DrawUnsupportedShaders();
         DrawGizmos();
@@ -68,14 +71,17 @@ public partial class CameraRenderer {
 		context.Submit();
 	}
 
-    void DrawVisibleGeometry () {
+    void DrawVisibleGeometry (bool useDynamicBatching, bool useGPUInstancing) {
         var sortingSettings = new SortingSettings(camera){
             criteria = SortingCriteria.CommonOpaque
         };
         // var sortingSettings = new SortingSettings(camera);
         var drawingSettings = new DrawingSettings(
             unlitShaderTagId, sortingSettings
-        );
+        ){
+			enableDynamicBatching = useDynamicBatching,
+			enableInstancing = useGPUInstancing
+		};
 		var filteringSettings = new FilteringSettings(RenderQueueRange.all);
 
 		context.DrawRenderers(

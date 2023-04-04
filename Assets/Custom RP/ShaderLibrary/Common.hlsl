@@ -12,6 +12,8 @@
 #define UNITY_MATRIX_P glstate_matrix_projection
 #define UNITY_PREV_MATRIX_M unity_PreMatrixM
 #define UNITY_PREV_MATRIX_I_M unity_PreMatrixIM
+
+#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/UnityInstancing.hlsl" // must be here
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/SpaceTransforms.hlsl"
 
 
