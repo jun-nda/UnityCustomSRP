@@ -1,5 +1,5 @@
-#ifndef CUSTOM_UNLIT_PASS_INCLUDED
-#define CUSTOM_UNLIT_PASS_INCLUDED
+#ifndef CUSTOM_LIT_PASS_INCLUDED
+#define CUSTOM_LIT_PASS_INCLUDED
 
 #include "../ShaderLibrary/Common.hlsl"
 
@@ -11,9 +11,9 @@ TEXTURE2D(_BaseMap);
 SAMPLER(sampler_BaseMap);
 
 UNITY_INSTANCING_BUFFER_START(UnityPerMaterial)
-UNITY_DEFINE_INSTANCED_PROP(float4, _BaseMap_ST)
-UNITY_DEFINE_INSTANCED_PROP(float4, _BaseColor)
-UNITY_DEFINE_INSTANCED_PROP(float, _Cutoff)
+    UNITY_DEFINE_INSTANCED_PROP(float4, _BaseMap_ST)
+    UNITY_DEFINE_INSTANCED_PROP(float4, _BaseColor)
+    UNITY_DEFINE_INSTANCED_PROP(float, _Cutoff)
 UNITY_INSTANCING_BUFFER_END(UnityPerMaterial)
 
 struct Attributes {
@@ -28,7 +28,7 @@ struct Varyings {
 	UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 
-Varyings UnlitPassVertex (Attributes input) {
+Varyings ShadowCasterPassVertex  (Attributes input) {
     Varyings output;
     UNITY_SETUP_INSTANCE_ID(input);
     UNITY_TRANSFER_INSTANCE_ID(input, output);
@@ -41,7 +41,7 @@ Varyings UnlitPassVertex (Attributes input) {
 	return output;
 }
 
-float4 UnlitPassFragment (Varyings input) : SV_TARGET{
+void ShadowCasterPassFragment (Varyings input){
     UNITY_SETUP_INSTANCE_ID(input);
 
     float4 baseMap = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.baseUV);
@@ -51,6 +51,5 @@ float4 UnlitPassFragment (Varyings input) : SV_TARGET{
 #if defined(_CLIPPING)
 	clip(base.a - UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, _Cutoff));
 #endif
-	return float4(base.w,base.w,base.w,base.w);
 }
 #endif

@@ -15,7 +15,8 @@ public partial class CameraRenderer {
 
     CullingResults cullingResults;
 
-    static ShaderTagId unlitShaderTagId = new ShaderTagId("SRPDefaultUnlit");
+    static ShaderTagId unlitShaderTagId = new ShaderTagId("SRPDefaultUnlit"),
+	litShaderTagId = new ShaderTagId("CustomLit");
 
 	// static ShaderTagId[] legacyShaderTagIds = {
 	// 	new ShaderTagId("Always"),
@@ -28,25 +29,36 @@ public partial class CameraRenderer {
 
     // static Material errorMaterial;
 
+	Lighting lighting = new Lighting();
+
 	public void Render (
 		ScriptableRenderContext context, Camera camera,
-		bool useDynamicBatching, bool useGPUInstancing
+		bool useDynamicBatching, bool useGPUInstancing,
+		ShadowSettings shadowSettings
 	) {
 		this.context = context;
 		this.camera = camera;
 
         PrepareBuffer();
         PrepareForSceneWindow();
-		if (!Cull()) {
+		if (!Cull(shadowSettings.maxDistance)) {
 			return;
 		}
 
-        Setup();
-        DrawVisibleGeometry(useDynamicBatching, useGPUInstancing);
+		// shadows first 
+		buffer.BeginSample(SampleName);
+		ExecuteBuffer();
+		lighting.Setup(context, cullingResults,shadowSettings);
+        buffer.EndSample(SampleName);
+		
+		Setup();
+        
+		DrawVisibleGeometry(useDynamicBatching, useGPUInstancing);
 #if UNITY_EDITOR
         DrawUnsupportedShaders();
         DrawGizmos();
 #endif
+		lighting.Cleanup(); // before submit
         Submit();
 	}
 
@@ -68,7 +80,7 @@ public partial class CameraRenderer {
     void Submit () {
         buffer.EndSample(SampleName);
         ExecuteBuffer();
-		context.Submit();
+		context.Submit(); // core submit
 	}
 
     void DrawVisibleGeometry (bool useDynamicBatching, bool useGPUInstancing) {
@@ -82,6 +94,9 @@ public partial class CameraRenderer {
 			enableDynamicBatching = useDynamicBatching,
 			enableInstancing = useGPUInstancing
 		};
+
+		drawingSettings.SetShaderPassName(1, litShaderTagId);
+
 		var filteringSettings = new FilteringSettings(RenderQueueRange.all);
 
 		context.DrawRenderers(
@@ -97,10 +112,15 @@ public partial class CameraRenderer {
 		buffer.Clear();
 	}
 
-	bool Cull () {
+	bool Cull (float maxShadowDistance) {
 		// ScriptableCullingParameters p;
 		if (camera.TryGetCullingParameters(out ScriptableCullingParameters p)) {
-            cullingResults = context.Cull(ref p);
+			/*
+			* It doesn't make sense to render shadows that are further away than the camera can see,
+			* so take the minimum of the max shadow distance and the camera's far clip plane.
+			*/
+            p.shadowDistance = Mathf.Min(maxShadowDistance, camera.farClipPlane);
+			cullingResults = context.Cull(ref p);
 			return true;
 		}
 		return false;
