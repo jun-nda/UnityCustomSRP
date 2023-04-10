@@ -17,6 +17,10 @@
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/UnityInstancing.hlsl" // must be here
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/SpaceTransforms.hlsl"
 
+float DistanceSquared(float3 pA, float3 pB) {
+	return dot(pA - pB, pA - pB);
+}
+
 
 // float3 TransformObjectToWorld (float3 positionOS) {
 // 	return mul(unity_ObjectToWorld, float4(positionOS, 1.0)).xyz;

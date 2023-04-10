@@ -1,8 +1,8 @@
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
 
 public partial class CameraRenderer {
-
 	ScriptableRenderContext context;
 
 	Camera camera;
@@ -17,17 +17,6 @@ public partial class CameraRenderer {
 
     static ShaderTagId unlitShaderTagId = new ShaderTagId("SRPDefaultUnlit"),
 	litShaderTagId = new ShaderTagId("CustomLit");
-
-	// static ShaderTagId[] legacyShaderTagIds = {
-	// 	new ShaderTagId("Always"),
-	// 	new ShaderTagId("ForwardBase"),
-	// 	new ShaderTagId("PrepassBase"),
-	// 	new ShaderTagId("Vertex"),
-	// 	new ShaderTagId("VertexLMRGBM"),
-	// 	new ShaderTagId("VertexLM")
-	// };
-
-    // static Material errorMaterial;
 
 	Lighting lighting = new Lighting();
 
@@ -45,7 +34,7 @@ public partial class CameraRenderer {
 			return;
 		}
 
-		// shadows first 
+		// shadows first, because objectrender need the shadow data
 		buffer.BeginSample(SampleName);
 		ExecuteBuffer();
 		lighting.Setup(context, cullingResults,shadowSettings);
@@ -65,6 +54,7 @@ public partial class CameraRenderer {
     void Setup () {
 		context.SetupCameraProperties(camera);
         CameraClearFlags flags = camera.clearFlags;
+		// clear RenderTarget
         buffer.ClearRenderTarget(
             flags <= CameraClearFlags.Depth, 
             flags == CameraClearFlags.Color,
@@ -73,8 +63,7 @@ public partial class CameraRenderer {
         );
 
         buffer.BeginSample(SampleName);
-        ExecuteBuffer();
-		// context.SetupCameraProperties(camera);
+        ExecuteBuffer(); // nothing to execute, only avoid unexpected error 
 	}
 
     void Submit () {
@@ -125,27 +114,4 @@ public partial class CameraRenderer {
 		}
 		return false;
 	}
-
-	// void DrawUnsupportedShaders () {
-    //     if (errorMaterial == null) {
-	// 		errorMaterial =
-	// 			new Material(Shader.Find("Hidden/InternalErrorShader"));
-	// 	}
-        
-	// 	var drawingSettings = new DrawingSettings(
-	// 		legacyShaderTagIds[0], new SortingSettings(camera)
-	// 	){
-	// 		overrideMaterial = errorMaterial
-	// 	};
-
-    //     for (int i = 1; i < legacyShaderTagIds.Length; i++) {
-	// 		drawingSettings.SetShaderPassName(i, legacyShaderTagIds[i]);
-	// 	}
-
-	// 	var filteringSettings = FilteringSettings.defaultValue;
-	// 	context.DrawRenderers(
-	// 		cullingResults, ref drawingSettings, ref filteringSettings
-	// 	);
-	// }
-
 }

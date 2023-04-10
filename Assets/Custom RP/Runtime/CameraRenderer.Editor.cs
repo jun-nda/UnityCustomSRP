@@ -2,6 +2,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
 
+// partial class of CameraRenderer
 partial class CameraRenderer {
 
 	partial void DrawGizmos ();
