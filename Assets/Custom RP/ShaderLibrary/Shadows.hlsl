@@ -11,7 +11,10 @@ SAMPLER_CMP(SHADOW_SAMPLER);
 CBUFFER_START(_CustomShadows)
 	int _CascadeCount;
 	float4 _CascadeCullingSpheres[MAX_CASCADE_COUNT];
+	float4 _CascadeData[MAX_CASCADE_COUNT];
 	float4x4 _DirectionalShadowMatrices[MAX_SHADOWED_DIRECTIONAL_LIGHT_COUNT * MAX_CASCADE_COUNT];
+	// float _ShadowDistance;
+	float4 _ShadowDistanceFade;
 CBUFFER_END
 
 struct DirectionalShadowData {
@@ -21,11 +24,38 @@ struct DirectionalShadowData {
 
 struct ShadowData {
 	int cascadeIndex;
+	float strength;
 };
+
+// (1 - d/m)/f
+float FadedShadowStrength (float distance, float scale, float fade) {
+	return saturate((1.0 - distance * scale) * fade);
+}
 
 ShadowData GetShadowData (Surface surfaceWS) {
 	ShadowData data;
-	data.cascadeIndex = 0;
+	
+	data.strength = FadedShadowStrength(
+		surfaceWS.depth, _ShadowDistanceFade.x, _ShadowDistanceFade.y
+	);
+	int i;
+	for (i = 0; i < _CascadeCount; i++) {
+		float4 sphere = _CascadeCullingSpheres[i];
+		float distanceSqr = DistanceSquared(surfaceWS.position, sphere.xyz); // 物体表面到圆心的距离平方
+		if (distanceSqr < sphere.w) {
+			if (i == _CascadeCount - 1) {
+				data.strength *= FadedShadowStrength(
+					distanceSqr, _CascadeData[i].x, _ShadowDistanceFade.z
+				);
+			}
+			break;
+		}
+	}
+	// 超出级联范围后，强度为0
+	if (i == _CascadeCount) {
+		data.strength = 0.0;
+	}
+	data.cascadeIndex = i;
 	return data;
 }
 
@@ -36,16 +66,22 @@ float SampleDirectionalShadowAtlas (float3 positionSTS) {
 	);
 }
 
-float GetDirectionalShadowAttenuation (DirectionalShadowData data, Surface surfaceWS) {
-	if (data.strength <= 0.0) {
+float GetDirectionalShadowAttenuation (
+	DirectionalShadowData directional, ShadowData global, Surface surfaceWS
+	) {
+	if (directional.strength <= 0.0) {
 		return 1.0;
 	}
+
+	// 朝着表面法向量方向，膨胀一个纹素的大小再乘个根号2的距离
+	float3 normalBias = surfaceWS.normal * _CascadeData[global.cascadeIndex].y;
+
 	float3 positionSTS = mul(
-		_DirectionalShadowMatrices[data.tileIndex],
-		float4(surfaceWS.position, 1.0)
+		_DirectionalShadowMatrices[directional.tileIndex],
+		float4(surfaceWS.position + normalBias, 1.0)
 	).xyz;
 	float shadow = SampleDirectionalShadowAtlas(positionSTS);
-	return lerp(1.0, shadow, data.strength); // shadow strenth
+	return lerp(1.0, shadow, directional.strength); // shadow strenth
 }
 
 

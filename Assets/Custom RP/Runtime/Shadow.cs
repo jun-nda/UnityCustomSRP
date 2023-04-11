@@ -21,6 +21,7 @@ public class Shadows
     struct ShadowedDirectionalLight
     {
         public int visibleLightIndex;
+        public float nearPlaneOffset;
     }
 
     ShadowedDirectionalLight[] ShadowedDirectionalLights =
@@ -32,9 +33,13 @@ public class Shadows
     dirShadowAtlasId = Shader.PropertyToID("_DirectionalShadowAtlas"),
     dirShadowMatricesId = Shader.PropertyToID("_DirectionalShadowMatrices"),
     cascadeCountId = Shader.PropertyToID("_CascadeCount"),
-    cascadeCullingSpheresId = Shader.PropertyToID("_CascadeCullingSpheres");
+    cascadeCullingSpheresId = Shader.PropertyToID("_CascadeCullingSpheres"),
+    cascadeDataId = Shader.PropertyToID("_CascadeData"),
+    // shadowDistanceId = Shader.PropertyToID("_ShadowDistance");
+    shadowDistanceFadeId = Shader.PropertyToID("_ShadowDistanceFade");
 
-    static Vector4[] cascadeCullingSpheres = new Vector4[maxCascades];
+    static Vector4[] cascadeCullingSpheres = new Vector4[maxCascades],
+        cascadeData = new Vector4[maxCascades];
 
     static Matrix4x4[]
             dirShadowMatrices = new Matrix4x4[maxShadowedDirectionalLightCount * maxCascades];
@@ -68,7 +73,8 @@ public class Shadows
             ShadowedDirectionalLights[ShadowedDirectionalLightCount] =
                 new ShadowedDirectionalLight
                 {
-                    visibleLightIndex = visibleLightIndex
+                    visibleLightIndex = visibleLightIndex,
+                    nearPlaneOffset = light.shadowNearPlane
                 };
             return new Vector2(
                 light.shadowStrength,
@@ -101,6 +107,7 @@ public class Shadows
             dirShadowAtlasId, atlasSize, atlasSize,
             32, FilterMode.Bilinear, RenderTextureFormat.Shadowmap
         );
+        // 修改渲染目标到 阴影贴图
         buffer.SetRenderTarget(
             dirShadowAtlasId,
             RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store
@@ -110,8 +117,9 @@ public class Shadows
         buffer.BeginSample(bufferName);
         ExecuteBuffer();
 
+        // atlasSize 为图集每维度像素个数
         int tiles = ShadowedDirectionalLightCount * settings.directional.cascadeCount;
-        Debug.LogFormat("{0}, {1}", ShadowedDirectionalLightCount, settings.directional.cascadeCount);
+        // Debug.LogFormat("{0}", ShadowedDirectionalLightCount, settings.directional.cascadeCount);
         int split = tiles <= 1 ? 1 : tiles <= 4 ? 2 : 4;
         int tileSize = atlasSize / split;
 
@@ -123,6 +131,16 @@ public class Shadows
         buffer.SetGlobalInt(cascadeCountId, settings.directional.cascadeCount);
 		buffer.SetGlobalVectorArray(
 			cascadeCullingSpheresId, cascadeCullingSpheres
+		);
+
+        float f = 1f - settings.directional.cascadeFade;
+        // 取倒数，shader里面就不用除法了，乘法快一点
+		buffer.SetGlobalVector(
+			shadowDistanceFadeId,
+			new Vector4(
+                1f / settings.maxDistance, 1f / settings.distanceFade,
+                1f / (1f - f * f)
+            )
 		);
 
         buffer.EndSample(bufferName);
@@ -162,6 +180,20 @@ public class Shadows
         return m;
     }
 
+	void SetCascadeData (int index, Vector4 cullingSphere, float tileSize) {
+        // normal bias
+        // cullingSphere.w 为球体半径
+        // tileSize为像素个数,直径长度/像素个数=每个像素的长度
+        float texelSize = 2f * cullingSphere.w / tileSize;
+		cascadeData[index] = new Vector4(
+			1f / cullingSphere.w,
+			texelSize * 1.4142136f // 最坏情况下是斜着，texel为方形，所以要乘个√2
+		);
+
+		cullingSphere.w *= cullingSphere.w;
+		cascadeCullingSpheres[index] = cullingSphere;
+	}
+
     void RenderDirectionalShadows(int index, int split, int tileSize)
     {
         ShadowedDirectionalLight light = ShadowedDirectionalLights[index];
@@ -175,8 +207,9 @@ public class Shadows
         for (int i = 0; i < cascadeCount; i++)
         {
             // unity native method for light space data
+            // 这里返回的应该就是正交矩阵了
             cullingResults.ComputeDirectionalShadowMatricesAndCullingPrimitives(
-                light.visibleLightIndex, i, cascadeCount, ratios, tileSize, 0f,
+                light.visibleLightIndex, i, cascadeCount, ratios, tileSize, light.nearPlaneOffset,
                 out Matrix4x4 viewMatrix, out Matrix4x4 projectionMatrix,
                 out ShadowSplitData splitData
             );
@@ -184,9 +217,7 @@ public class Shadows
 			// all light use the same, only compute once
             if (index == 0)
             {
-				Vector4 cullingSphere = splitData.cullingSphere;
-				cullingSphere.w *= cullingSphere.w;
-                cascadeCullingSpheres[i] = cullingSphere;
+                SetCascadeData(i, splitData.cullingSphere, tileSize);
             }
 
             shadowSettings.splitData = splitData;
@@ -198,8 +229,11 @@ public class Shadows
 
             buffer.SetViewProjectionMatrices(viewMatrix, projectionMatrix);
 			buffer.SetGlobalMatrixArray(dirShadowMatricesId, dirShadowMatrices);
+            buffer.SetGlobalVectorArray(cascadeDataId, cascadeData);
+            // buffer.SetGlobalDepthBias(500000f, 0f);
 			ExecuteBuffer();
             context.DrawShadows(ref shadowSettings);
+            // buffer.SetGlobalDepthBias(0f, 0f);
         }
 
     }
