@@ -6,6 +6,9 @@ float4x4 unity_ObjectToWorld;
 float4x4 unity_WorldToObject;
 float4 unity_LODFade;
 real4 unity_WorldTransformParams; // 暂时不知道是干啥的
+
+float4 unity_LightmapST; // 每个物体在光照贴图上的位置偏移（应该是这么理解）
+float4 unity_DynamicLightmapST;
 CBUFFER_END
 
 

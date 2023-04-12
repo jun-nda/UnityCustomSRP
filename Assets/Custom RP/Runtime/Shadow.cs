@@ -21,6 +21,7 @@ public class Shadows
     struct ShadowedDirectionalLight
     {
         public int visibleLightIndex;
+        public float slopeScaleBias; // Configurable Biases
         public float nearPlaneOffset;
     }
 
@@ -36,6 +37,7 @@ public class Shadows
     cascadeCullingSpheresId = Shader.PropertyToID("_CascadeCullingSpheres"),
     cascadeDataId = Shader.PropertyToID("_CascadeData"),
     // shadowDistanceId = Shader.PropertyToID("_ShadowDistance");
+    shadowAtlasSizeId = Shader.PropertyToID("_ShadowAtlasSize"),
     shadowDistanceFadeId = Shader.PropertyToID("_ShadowDistanceFade");
 
     static Vector4[] cascadeCullingSpheres = new Vector4[maxCascades],
@@ -43,6 +45,19 @@ public class Shadows
 
     static Matrix4x4[]
             dirShadowMatrices = new Matrix4x4[maxShadowedDirectionalLightCount * maxCascades];
+
+    // PCF
+	static string[] directionalFilterKeywords = {
+		"_DIRECTIONAL_PCF3",
+		"_DIRECTIONAL_PCF5",
+		"_DIRECTIONAL_PCF7",
+	};
+
+	static string[] cascadeBlendKeywords = {
+		"_CASCADE_BLEND_SOFT",
+		"_CASCADE_BLEND_DITHER"
+	};
+
 
     public void Setup(
         ScriptableRenderContext context, CullingResults cullingResults,
@@ -62,7 +77,8 @@ public class Shadows
         buffer.Clear();
     }
 
-    public Vector2 ReserveDirectionalShadows(Light light, int visibleLightIndex)
+    // vector里存的是我们需要的渲染数据，不一定是一个向量，xyzw或rgba一般被叫做通道channel
+    public Vector3 ReserveDirectionalShadows(Light light, int visibleLightIndex)
     {
         if (ShadowedDirectionalLightCount < maxShadowedDirectionalLightCount &&
             light.shadows != LightShadows.None && light.shadowStrength > 0f &&
@@ -74,15 +90,17 @@ public class Shadows
                 new ShadowedDirectionalLight
                 {
                     visibleLightIndex = visibleLightIndex,
+                    slopeScaleBias = light.shadowBias,
                     nearPlaneOffset = light.shadowNearPlane
                 };
-            return new Vector2(
+            return new Vector3(
                 light.shadowStrength,
-                settings.directional.cascadeCount * ShadowedDirectionalLightCount++
+                settings.directional.cascadeCount * ShadowedDirectionalLightCount++,
+                light.shadowNormalBias
         );
         }
 
-        return Vector2.zero;
+        return Vector3.zero;
     }
     public void Render()
     {
@@ -143,9 +161,32 @@ public class Shadows
             )
 		);
 
+        SetKeywords(
+            directionalFilterKeywords, (int)settings.directional.filter - 1            
+        );
+        SetKeywords(
+			cascadeBlendKeywords, (int)settings.directional.cascadeBlend - 1
+		);
+        buffer.SetGlobalVector(
+			shadowAtlasSizeId, new Vector4(atlasSize, 1f / atlasSize)
+		);
         buffer.EndSample(bufferName);
         ExecuteBuffer();
     }
+
+	void SetKeywords (string[] keywords, int enabledIndex) {
+		// int enabledIndex = (int)settings.directional.filter - 1;
+        Debug.LogFormat("{0}", (int)settings.directional.filter);
+		for (int i = 0; i < keywords.Length; i++) {
+			if (i == enabledIndex) {
+				buffer.EnableShaderKeyword(keywords[i]);
+			}
+			else {
+				buffer.DisableShaderKeyword(keywords[i]);
+			}
+		}
+	}
+
     Vector2 SetTileViewport(int index, int split, float tileSize)
     {
         Vector2 offset = new Vector2(index % split, index / split);
@@ -185,17 +226,21 @@ public class Shadows
         // cullingSphere.w 为球体半径
         // tileSize为像素个数,直径长度/像素个数=每个像素的长度
         float texelSize = 2f * cullingSphere.w / tileSize;
+        // for PCF
+        float filterSize = texelSize * ((float)settings.directional.filter + 1f);
 		cascadeData[index] = new Vector4(
 			1f / cullingSphere.w,
-			texelSize * 1.4142136f // 最坏情况下是斜着，texel为方形，所以要乘个√2
+			filterSize * 1.4142136f // 最坏情况下是斜着，texel为方形，所以要乘个√2
 		);
 
+        cullingSphere.w -= filterSize;
 		cullingSphere.w *= cullingSphere.w;
 		cascadeCullingSpheres[index] = cullingSphere;
 	}
 
     void RenderDirectionalShadows(int index, int split, int tileSize)
     {
+        // 注意这里的light是我们自己定义得灯光数据类
         ShadowedDirectionalLight light = ShadowedDirectionalLights[index];
         var shadowSettings =
             new ShadowDrawingSettings(cullingResults, light.visibleLightIndex);
@@ -203,7 +248,8 @@ public class Shadows
         int cascadeCount = settings.directional.cascadeCount;
         int tileOffset = index * cascadeCount;
         Vector3 ratios = settings.directional.CascadeRatios;
-
+		float cullingFactor =
+			Mathf.Max(0f, 0.8f - settings.directional.cascadeFade);
         for (int i = 0; i < cascadeCount; i++)
         {
             // unity native method for light space data
@@ -220,6 +266,7 @@ public class Shadows
                 SetCascadeData(i, splitData.cullingSphere, tileSize);
             }
 
+            splitData.shadowCascadeBlendCullingFactor = cullingFactor; // culling bias
             shadowSettings.splitData = splitData;
             int tileIndex = tileOffset + i;
             dirShadowMatrices[tileIndex] = ConvertToAtlasMatrix(
@@ -230,10 +277,10 @@ public class Shadows
             buffer.SetViewProjectionMatrices(viewMatrix, projectionMatrix);
 			buffer.SetGlobalMatrixArray(dirShadowMatricesId, dirShadowMatrices);
             buffer.SetGlobalVectorArray(cascadeDataId, cascadeData);
-            // buffer.SetGlobalDepthBias(500000f, 0f);
+            buffer.SetGlobalDepthBias(0f, light.slopeScaleBias);
 			ExecuteBuffer();
             context.DrawShadows(ref shadowSettings);
-            // buffer.SetGlobalDepthBias(0f, 0f);
+            buffer.SetGlobalDepthBias(0f, 0f);
         }
 
     }

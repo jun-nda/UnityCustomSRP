@@ -25,8 +25,14 @@ Shader "Custom RP/Lit" {
 			Blend [_SrcBlend] [_DstBlend]
 
 			HLSLPROGRAM
+			// shader_feature类似define 告诉引擎只生成这一个
 			#pragma shader_feature _CLIPPING
 			#pragma shader_feature _PREMULTIPLY_ALPHA
+			// _ 表示2*2
+			// multi_compile 引擎会自动生成所有的变体， 用于替代分支
+			#pragma multi_compile _ _DIRECTIONAL_PCF3 _DIRECTIONAL_PCF5 _DIRECTIONAL_PCF7
+			#pragma multi_compile _ _CASCADE_BLEND_SOFT _CASCADE_BLEND_DITHER
+			#pragma multi_compile _ LIGHTMAP_ON //
 			#pragma multi_compile_instancing
 			#pragma vertex LitPassVertex
 			#pragma fragment LitPassFragment

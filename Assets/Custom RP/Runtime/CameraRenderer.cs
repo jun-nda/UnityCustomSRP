@@ -81,7 +81,8 @@ public partial class CameraRenderer {
             unlitShaderTagId, sortingSettings
         ){
 			enableDynamicBatching = useDynamicBatching,
-			enableInstancing = useGPUInstancing
+			enableInstancing = useGPUInstancing,
+			perObjectData = PerObjectData.Lightmaps // for light Map
 		};
 
 		drawingSettings.SetShaderPassName(1, litShaderTagId);
@@ -93,7 +94,6 @@ public partial class CameraRenderer {
 		);
 
 		context.DrawSkybox(camera);
-        // Debug.Log("Hello World", camera);
 	}
 
     void ExecuteBuffer () {
