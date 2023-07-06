@@ -16,6 +16,10 @@ Shader "Custom RP/Lit" {
 	}
 	
 	SubShader {
+		HLSLINCLUDE
+		#include "../ShaderLibrary/Common.hlsl"
+		#include "LitInput.hlsl"
+		ENDHLSL
 		
 		Pass {
 			Tags {
@@ -25,7 +29,11 @@ Shader "Custom RP/Lit" {
 			Blend [_SrcBlend] [_DstBlend]
 
 			HLSLPROGRAM
-			// shader_feature类似define 告诉引擎只生成这一个
+			// shader_feature可以认为是multi_complie的子集，
+			//其与multi_complie最大的不同就是此关键字的声明变体是材质球层级的（multi_complie是全局），
+			//只能通过美术在制作时调整相应材质，未被选择的变体会在打包的时候被舍弃（multi_complie不会，
+			//所以其声明的变体是不能通过代码控制的（打包后会出问题）。上面的声明方式中省略了“_”，
+			//这只是一种简写方式，其作用与下两行相同
 			#pragma shader_feature _CLIPPING
 			#pragma shader_feature _PREMULTIPLY_ALPHA
 			// _ 表示2*2
@@ -58,6 +66,22 @@ Shader "Custom RP/Lit" {
 			ENDHLSL
 		}
 
+		// Meta Pass
+		Pass {
+			Tags {
+				"LightMode" = "Meta"
+			}
+
+			Cull Off
+
+			HLSLPROGRAM
+			#pragma target 3.5
+			#pragma vertex MetaPassVertex
+			#pragma fragment MetaPassFragment
+			#include "MetaPass.hlsl"
+			ENDHLSL
+		}
+		
 	}
 
 	CustomEditor "CustomShaderGUI"

@@ -28,6 +28,7 @@ public partial class CameraRenderer {
 		this.context = context;
 		this.camera = camera;
 
+		//Debug.LogFormat("lalala: {0}", LightProbeProxyVolume.isFeatureSupported); 
         PrepareBuffer();
         PrepareForSceneWindow();
 		if (!Cull(shadowSettings.maxDistance)) {
@@ -82,7 +83,8 @@ public partial class CameraRenderer {
         ){
 			enableDynamicBatching = useDynamicBatching,
 			enableInstancing = useGPUInstancing,
-			perObjectData = PerObjectData.Lightmaps // for light Map
+			perObjectData = PerObjectData.Lightmaps | PerObjectData.LightProbe
+			                                        | PerObjectData.LightProbeProxyVolume
 		};
 
 		drawingSettings.SetShaderPassName(1, litShaderTagId);

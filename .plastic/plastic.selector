@@ -1,4 +1,0 @@
-repository "MyURP@wechat_os_qy09j2cgt7kbn-vrmd7eb_jwc@cloud.cn"
-  path "/"
-    br "/main"
-    co "/main"

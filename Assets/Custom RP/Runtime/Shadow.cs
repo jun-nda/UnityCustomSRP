@@ -5,7 +5,6 @@ public class Shadows
 {
 
     const string bufferName = "Shadows";
-
     CommandBuffer buffer = new CommandBuffer
     {
         name = bufferName
@@ -58,7 +57,7 @@ public class Shadows
 		"_CASCADE_BLEND_DITHER"
 	};
 
-
+    BatchCullingProjectionType batchCullingProType;
     public void Setup(
         ScriptableRenderContext context, CullingResults cullingResults,
         ShadowSettings settings
@@ -176,7 +175,7 @@ public class Shadows
 
 	void SetKeywords (string[] keywords, int enabledIndex) {
 		// int enabledIndex = (int)settings.directional.filter - 1;
-        Debug.LogFormat("{0}", (int)settings.directional.filter);
+        //Debug.LogFormat("{0}", (int)settings.directional.filter);
 		for (int i = 0; i < keywords.Length; i++) {
 			if (i == enabledIndex) {
 				buffer.EnableShaderKeyword(keywords[i]);
@@ -242,8 +241,9 @@ public class Shadows
     {
         // 注意这里的light是我们自己定义得灯光数据类
         ShadowedDirectionalLight light = ShadowedDirectionalLights[index];
+       
         var shadowSettings =
-            new ShadowDrawingSettings(cullingResults, light.visibleLightIndex);
+            new ShadowDrawingSettings(cullingResults, light.visibleLightIndex, batchCullingProType);
 
         int cascadeCount = settings.directional.cascadeCount;
         int tileOffset = index * cascadeCount;
