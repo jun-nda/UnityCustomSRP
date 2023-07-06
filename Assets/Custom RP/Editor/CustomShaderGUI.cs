@@ -7,7 +7,18 @@ public class CustomShaderGUI : ShaderGUI {
     Object[] materials;
     MaterialProperty[] properties;
     bool showPresets;
+    enum ShadowMode {
+	    On, Clip, Dither, Off
+    }
 
+    ShadowMode Shadows {
+	    set {
+		    if (SetProperty("_Shadows", (float)value)) {
+			    SetKeyword("_SHADOWS_CLIP", value == ShadowMode.Clip);
+			    SetKeyword("_SHADOWS_DITHER", value == ShadowMode.Dither);
+		    }
+	    }
+    }
 	public override void OnGUI (
 		MaterialEditor materialEditor, MaterialProperty[] properties
 	) {
@@ -98,6 +109,7 @@ public class CustomShaderGUI : ShaderGUI {
 			DstBlend = BlendMode.Zero;
 			ZWrite = true;
 			RenderQueue = RenderQueue.Geometry;
+			Shadows = ShadowMode.On;
 		}
 	}
 	void ClipPreset () {
@@ -108,6 +120,7 @@ public class CustomShaderGUI : ShaderGUI {
 			DstBlend = BlendMode.Zero;
 			ZWrite = true;
 			RenderQueue = RenderQueue.AlphaTest;
+			Shadows = ShadowMode.Clip;
 		}
 	}
 	void FadePreset () {
@@ -118,6 +131,7 @@ public class CustomShaderGUI : ShaderGUI {
 			DstBlend = BlendMode.OneMinusSrcAlpha;
 			ZWrite = false;
 			RenderQueue = RenderQueue.Transparent;
+			Shadows = ShadowMode.Dither;
 		}
 	}
 
@@ -129,6 +143,7 @@ public class CustomShaderGUI : ShaderGUI {
 			DstBlend = BlendMode.OneMinusSrcAlpha;
 			ZWrite = false;
 			RenderQueue = RenderQueue.Transparent;
+			Shadows = ShadowMode.Dither;
 		}
 	}
 }
