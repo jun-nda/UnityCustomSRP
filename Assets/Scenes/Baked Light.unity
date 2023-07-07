@@ -20,7 +20,7 @@ RenderSettings:
   m_FogDensity: 0.01
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.9339623, g: 0.9339623, b: 0.9339623, a: 1}
+  m_AmbientSkyColor: {r: 0, g: 0, b: 0, a: 1}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
   m_AmbientIntensity: 0
@@ -155,6 +155,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2427ea432c3e616428b0c7cd28b4d847, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  emissionColor: {r: 0, g: 0, b: 0, a: 1}
   baseColor: {r: 0.813608, g: 0.14117646, b: 0.90588236, a: 1}
   cutoff: 0.5
   metallic: 0
@@ -524,7 +525,7 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_RenderingLayerMask: 1
-  m_Lightmapping: 1
+  m_Lightmapping: 2
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
@@ -605,6 +606,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2427ea432c3e616428b0c7cd28b4d847, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  emissionColor: {r: 0, g: 0, b: 0, a: 1}
   baseColor: {r: 0.14117646, g: 0.7278792, b: 0.90588236, a: 1}
   cutoff: 0.5
   metallic: 0
@@ -850,7 +852,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!114 &797231946
 MonoBehaviour:
@@ -864,6 +866,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2427ea432c3e616428b0c7cd28b4d847, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  emissionColor: {r: 1, g: 0, b: 0, a: 1}
   baseColor: {r: 0.813608, g: 0.14117646, b: 0.90588236, a: 1}
   cutoff: 0.5
   metallic: 0
@@ -947,7 +950,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 797231945}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -8.853, y: 2.32, z: -11.498}
+  m_LocalPosition: {x: -6.884, y: 2.382, z: -11.8}
   m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1125,6 +1128,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2427ea432c3e616428b0c7cd28b4d847, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  emissionColor: {r: 0, g: 0, b: 0, a: 1}
   baseColor: {r: 0.8174746, g: 0.9056604, b: 0.14097545, a: 1}
   cutoff: 0.5
   metallic: 0
@@ -1247,6 +1251,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2427ea432c3e616428b0c7cd28b4d847, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  emissionColor: {r: 0, g: 0, b: 0, a: 1}
   baseColor: {r: 0.14117646, g: 0.7278792, b: 0.90588236, a: 1}
   cutoff: 0.5
   metallic: 0
@@ -1419,6 +1424,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2427ea432c3e616428b0c7cd28b4d847, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  emissionColor: {r: 0, g: 0, b: 0, a: 1}
   baseColor: {r: 0.086507656, g: 0.6792453, b: 0.25138956, a: 1}
   cutoff: 0.5
   metallic: 0
@@ -1522,6 +1528,7 @@ GameObject:
   - component: {fileID: 1870444519}
   - component: {fileID: 1870444518}
   - component: {fileID: 1870444517}
+  - component: {fileID: 1870444521}
   m_Layer: 0
   m_Name: ceiling
   m_TagString: Untagged
@@ -1615,6 +1622,23 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 90, y: 90, z: 0}
+--- !u!114 &1870444521
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1870444516}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2427ea432c3e616428b0c7cd28b4d847, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  emissionColor: {r: 0, g: 0, b: 0, a: 1}
+  baseColor: {r: 1, g: 1, b: 1, a: 1}
+  cutoff: 0.5
+  metallic: 0
+  smoothness: 0.5
 --- !u!1 &2058238315
 GameObject:
   m_ObjectHideFlags: 0

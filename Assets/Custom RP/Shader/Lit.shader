@@ -1,10 +1,17 @@
 Shader "Custom RP/Lit" {
 	Properties {
+		// 透明效果用的贴图的名字，在引擎里是写死的，就是这俩。
+		// 但是我们外面想保持原有的样子，就只能把这俩隐藏，然后手动复制一下属性
+		[HideInInspector] _MainTex("Texture for Lightmap", 2D) = "white" {}
+		[HideInInspector] _Color("Color for Lightmap", Color) = (0.5, 0.5, 0.5, 1.0)
+		
 		_BaseMap("Texture", 2D) = "white" {}
-		_BaseColor("Color", Color) = (0.5, 0.5, 0.5, 1.0)
+		[HDR]_BaseColor("Color", Color) = (0.5, 0.5, 0.5, 1.0)
 		_Cutoff ("Alpha Cutoff", Range(0.0, 1.0)) = 0.5
 		[Toggle(_CLIPPING)] _Clipping ("Alpha Clipping", Float) = 0
 		[KeywordEnum(On, Clip, Dither, Off)] _Shadows ("Shadows", Float) = 0
+		[NoScaleOffset] _EmissionMap("Emission", 2D) = "white" {}
+		[HDR] _EmissionColor("Emission", Color) = (0.0, 0.0, 0.0, 0.0)
 		[Toggle(_PREMULTIPLY_ALPHA)] _PremulAlpha ("Premultiply Alpha", Float) = 0
 
 		// BRDF

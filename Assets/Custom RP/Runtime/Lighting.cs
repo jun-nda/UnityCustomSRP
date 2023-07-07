@@ -12,6 +12,7 @@ public class Lighting {
         dirLightColorsId = Shader.PropertyToID("_DirectionalLightColors"),
 		dirLightDirectionsId = Shader.PropertyToID("_DirectionalLightDirections"),
 		dirLightShadowDataId = Shader.PropertyToID("_DirectionalLightShadowData");
+	
 
 	static Vector4[]
 		dirLightColors = new Vector4[maxDirLightCount],
