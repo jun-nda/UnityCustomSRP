@@ -1,6 +1,11 @@
 ﻿#ifndef CUSTOM_META_PASS_INCLUDED
 #define CUSTOM_META_PASS_INCLUDED
 
+/* 烘焙系统：
+ * 1.lightmap光照贴图：存储场景内表面的光照信息
+ * 2.lightprobe光照探针：存储场景内空白空间的光照信息
+ * 
+ * */
 #include "../ShaderLibrary/Surface.hlsl"
 #include "../ShaderLibrary/Shadows.hlsl"
 #include "../ShaderLibrary/Light.hlsl"

@@ -56,7 +56,14 @@ public class Shadows
 		"_CASCADE_BLEND_SOFT",
 		"_CASCADE_BLEND_DITHER"
 	};
+  
+    static string[] shadowMaskKeywords = {
+        "_SHADOW_MASK_ALWAYS",
+        "_SHADOW_MASK_DISTANCE"
+    };
 
+    bool useShadowMask;
+    
     BatchCullingProjectionType batchCullingProType;
     public void Setup(
         ScriptableRenderContext context, CullingResults cullingResults,
@@ -68,6 +75,7 @@ public class Shadows
         this.settings = settings;
 
         ShadowedDirectionalLightCount = 0;
+        useShadowMask = false;
     }
 
     void ExecuteBuffer()
@@ -80,11 +88,22 @@ public class Shadows
     public Vector3 ReserveDirectionalShadows(Light light, int visibleLightIndex)
     {
         if (ShadowedDirectionalLightCount < maxShadowedDirectionalLightCount &&
-            light.shadows != LightShadows.None && light.shadowStrength > 0f &&
-            cullingResults.GetShadowCasterBounds(visibleLightIndex, out Bounds b)
+            light.shadows != LightShadows.None && light.shadowStrength > 0f 
             )
         {
-
+            LightBakingOutput lightBaking = light.bakingOutput;
+            if (
+                lightBaking.lightmapBakeType == LightmapBakeType.Mixed &&
+                lightBaking.mixedLightingMode == MixedLightingMode.Shadowmask
+                ) {
+                useShadowMask = true; // 打开shadowMask
+            }
+            if (!cullingResults.GetShadowCasterBounds(
+                visibleLightIndex, out Bounds b
+            )) {
+                return new Vector3(-light.shadowStrength, 0f, 0f);
+            }
+            
             ShadowedDirectionalLights[ShadowedDirectionalLightCount] =
                 new ShadowedDirectionalLight
                 {
@@ -115,6 +134,11 @@ public class Shadows
                 32, FilterMode.Bilinear, RenderTextureFormat.Shadowmap
             );
         }
+        
+        buffer.BeginSample(bufferName);
+        SetKeywords(shadowMaskKeywords, useShadowMask ? 0 : QualitySettings.shadowmaskMode == ShadowmaskMode.Shadowmask ? 0 : 1 -1);
+        buffer.EndSample(bufferName);
+        ExecuteBuffer();
     }
 
     void RenderDirectionalShadows()

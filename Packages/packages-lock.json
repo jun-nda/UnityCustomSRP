@@ -77,7 +77,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.render-pipelines.core": {
-      "version": "file:E:/Practice/com.unity.render-pipelines.core@14.0.8",
+      "version": "file:D:/Code/Projects/unity_render/com.unity.render-pipelines.core@14.0.8",
       "depth": 0,
       "source": "local",
       "dependencies": {
