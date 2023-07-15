@@ -17,7 +17,8 @@ Shader "Custom RP/Lit" {
 		// BRDF
 		_Metallic ("Metallic", Range(0, 1)) = 0
 		_Smoothness ("Smoothness", Range(0, 1)) = 0.5
-
+		_Fresnel ("Fresnel", Range(0, 1)) = 1
+		
 		[Enum(UnityEngine.Rendering.BlendMode)]_SrcBlend ("Src Blend", Float) = 1
 		[Enum(UnityEngine.Rendering.BlendMode)]_DstBlend ("Dst Blend", Float) = 0
 		[Enum(Off, 0, On, 1)] _ZWrite ("Z Write", Float) = 1
@@ -51,6 +52,7 @@ Shader "Custom RP/Lit" {
 			#pragma multi_compile _ LIGHTMAP_ON //
 			#pragma multi_compile_instancing
 			#pragma multi_compile _ _SHADOW_MASK_ALWAYS _SHADOW_MASK_DISTANCE
+			#pragma multi_compile _ LOD_FADE_CROSSFADE
 			
 			#pragma vertex LitPassVertex
 			#pragma fragment LitPassFragment
@@ -73,6 +75,7 @@ Shader "Custom RP/Lit" {
 			#pragma multi_compile_instancing
 			#pragma vertex ShadowCasterPassVertex
 			#pragma fragment ShadowCasterPassFragment
+			#pragma multi_compile _ LOD_FADE_CROSSFADE
 			#include "ShadowCasterPass.hlsl"
 			ENDHLSL
 		}

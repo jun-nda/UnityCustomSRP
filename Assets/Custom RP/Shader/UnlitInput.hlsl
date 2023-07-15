@@ -35,4 +35,7 @@ float GetSmoothness (float2 baseUV) {
 float3 GetEmission (float2 baseUV) {
 	return GetBase(baseUV).rgb;
 }
+float GetFresnel (float2 baseUV) {
+	return 0.0;
+}
 #endif

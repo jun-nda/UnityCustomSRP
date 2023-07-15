@@ -64,7 +64,11 @@ Varyings LitPassVertex (Attributes input) {
 
 float4 LitPassFragment (Varyings input) : SV_TARGET{
     UNITY_SETUP_INSTANCE_ID(input);
-    
+	
+	#if defined(LOD_FADE_CROSSFADE)
+	ClipLOD(input.positionCS.xy, unity_LODFade.x);
+	#endif
+	
 	float4 base = GetBase(input.baseUV);
 #if defined(_CLIPPING)
 	clip(base.a - GetCutoff(input.baseUV));
@@ -82,7 +86,8 @@ float4 LitPassFragment (Varyings input) : SV_TARGET{
 	surface.alpha = base.a;
 	surface.metallic = GetMetallic(input.baseUV);
 	surface.smoothness = GetSmoothness(input.baseUV);
-
+	surface.fresnelStrength = GetFresnel(input.baseUV);
+	
     surface.dither = InterleavedGradientNoise(input.positionCS.xy, 0);
 
     #if defined(_PREMULTIPLY_ALPHA)
@@ -91,7 +96,7 @@ float4 LitPassFragment (Varyings input) : SV_TARGET{
         BRDF brdf = GetBRDF(surface);
     #endif
     
-    GI gi = GetGI(GI_FRAGMENT_DATA(input), surface);// init GI
+    GI gi = GetGI(GI_FRAGMENT_DATA(input), surface,brdf);// init GI
     float3 color = GetLighting(surface,brdf, gi);
 	color += GetEmission(input.baseUV);
 	

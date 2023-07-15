@@ -88,6 +88,7 @@ public partial class CameraRenderer {
 			                                        | PerObjectData.ShadowMask
 			                                        | PerObjectData.OcclusionProbe
 			                                        | PerObjectData.OcclusionProbeProxyVolume
+			                                        | PerObjectData.ReflectionProbes
 		};
 
 		drawingSettings.SetShaderPassName(1, litShaderTagId);
