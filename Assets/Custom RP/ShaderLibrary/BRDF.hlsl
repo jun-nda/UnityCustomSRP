@@ -35,10 +35,6 @@ BRDF GetBRDF (Surface surface, bool applyAlphaToDiffuse = false) {
 	return brdf;
 }
 
-float Square (float v) {
-	return v * v;
-}
-
 float SpecularStrength (Surface surface, BRDF brdf, Light light) {
 	float3 h = SafeNormalize(light.direction + surface.viewDirection);
 	float nh2 = Square(saturate(dot(surface.normal, h)));
